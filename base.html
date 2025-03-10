@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Address to Coordinates with Additional Details</title>
+</head>
+<body>
+
+  <form id="addressForm">
+    <label for="state">State:</label>
+    <input type="text" id="state" placeholder="state" />
+
+    <input type="text" id="city" placeholder="city" />
+
+    <label for="pincode">Pincode:</label>
+    <input type="number" id="pincode" name="pincode" min="100000" max="999999" required><br><br>
+
+    <label for="address">Address Details:</label><br>
+    <textarea id="address" name="address" rows="4" cols="50" required></textarea><br><br>
+
+    <label for="price">Price of Plot:</label>
+    <input type="number" id="price" name="price" required><br><br>
+
+    <label for="size">Size of Plot (in sq ft):</label>
+    <input type="number" id="size" name="size" required><br><br>
+
+    <label for="sqftPrice">Price per sq ft:</label>
+    <input type="text" id="sqftPrice" name="sqftPrice" readonly><br><br>
+
+    <label for="media">Upload Images and Videos:</label><br>
+    <button type="button" id="uploadWidget">Upload Media</button><br><br>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
+
+  <script>
+
+    const stateDropdown = document.getElementById("state");
+    const cityDropdown = document.getElementById("city");
+
+    // Fetch states
+    const fetchStates = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/states");
+        const states = response.data;
+
+        states.forEach(state => {
+          const option = document.createElement("option");
+          option.value = state.isoCode; // Use isoCode for state
+          option.textContent = state.name;
+          stateDropdown.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error fetching states:", error);
+      }
+    };
+    stateDropdown.addEventListener("change", async () => {
+      const stateCode = stateDropdown.value;
+
+      if (!stateCode) {
+        cityDropdown.innerHTML = '<option value="">Select City</option>';
+        return;
+      }
+
+      try {
+        const response = await axios.get(`http://localhost:8000/api/cities/${stateCode}`);
+        const cities = response.data;
+
+        cityDropdown.innerHTML = '<option value="">Select City</option>'; // Reset cities
+
+        cities.forEach(city => {
+          const option = document.createElement("option");
+          option.value = city.name; // Use city name
+          option.textContent = city.name;
+          cityDropdown.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error fetching cities:", error);
+      }
+    });
+
+    // Call fetchStates on page load
+    fetchStates();
+    const form = document.getElementById('addressForm');
+    const coordinatesDiv = document.getElementById('coordinates');
+    const sqftPriceInput = document.getElementById('sqftPrice');
+    const uploadedMediaUrls = [];
+
+    document.getElementById('size').addEventListener('input', () => {
+      const price = parseFloat(document.getElementById('price').value) || 0;
+      const size = parseFloat(document.getElementById('size').value) || 0;
+      sqftPriceInput.value = size > 0 ? (price / size).toFixed(2) : '';
+    });
+
+    document.getElementById('price').addEventListener('input', () => {
+      const price = parseFloat(document.getElementById('price').value) || 0;
+      const size = parseFloat(document.getElementById('size').value) || 0;
+      sqftPriceInput.value = size > 0 ? (price / size).toFixed(2) : '';
+    });
+
+    const uploadWidget = cloudinary.createUploadWidget(
+      {
+        cloudName: "dqhddm7mi",
+        apiKey: "222323681783653",
+        uploadPreset: "aarvasa",
+        folder: "property_media",
+        sources: ["local", "camera"],
+        resourceType: "auto"
+      },
+      (error, result) => {
+        if (!error && result && result.event === "success") {
+          const file = result.info;
+          uploadedMediaUrls.push(file.secure_url);
+        }
+      }
+    );
+
+    document.getElementById('uploadWidget').addEventListener('click', () => {
+      uploadWidget.open();
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const city = document.getElementById('city').value;
+      const state = document.getElementById('state').value;
+      const pincode = document.getElementById('pincode').value;
+      const addressDetails = document.getElementById('address').value;
+      const price = document.getElementById('price').value;
+      const size = document.getElementById('size').value;
+      const sqftPrice = sqftPriceInput.value;
+
+      const addressdetails = addressDetails.split(",");
+      const fullAddress = `${city}, ${state} ${pincode}, ${addressdetails}`;
+      let longitude=null;
+      let latitude = null;
+
+
+      try {
+        const response = await axios.post('/get-coordinates', { address: fullAddress }); 
+
+        
+        longitude=response.data.longitude;
+        latitude=response.data.latitude;
+        const dataToStore = {
+            city,
+            state,
+            pincode,
+            addressDetails,
+            price,
+            size,
+            sqftPrice,
+            latitude,
+            longitude,
+            uploadedMediaUrls
+        };
+
+        // Send data to the backend to store in Firebase
+        const storeResponse = await axios.post('/store_details', dataToStore);
+        uploadedMediaUrls = [];
+        console.log('Data stored successfully:', storeResponse.data);
+
+
+      } catch (error) {
+        console.error('Error:', error.response ? error.response.data.error : error.message);
+      }
+
+      console.log("Uploaded Media URLs:", uploadedMediaUrls);
+    });
+  </script>
+
+</body>
+</html>
