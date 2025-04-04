@@ -5,7 +5,7 @@ const agentController = require('../controllers/agentController');
 // Route to add an agent
 router.post('/add_agents', agentController.addAgent);
 
-// Route to fetch all agents
-router.post('/all_agents', agentController.getAllAgents);
+// Route to fetch all agents(updated to use GET)
+router.post('/all', agentController.getAllAgents);
 
 module.exports = router;
