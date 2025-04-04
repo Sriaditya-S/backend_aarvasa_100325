@@ -13,7 +13,7 @@ const firebaseWebApp = require('./config/firebaseWebApp');
 const { geocodeAddress, calculateDistance } = require('./utils/geocodeUtils');
 
 // Middleware
-app.use(cors({ origin: '*' }));
+app.use(cors({ origin: 'https://frontendaarvasa100325.vercel.app' }));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -39,6 +39,11 @@ app.use('/agents', agentRoutes);
 app.use('/ratings', ratingRoutes);
 app.use('/consultations', consultationRoutes);
 app.use('/residential-projects', residentialProjectRoutes);
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: 'Internal Server Error' });
+});
 
 // Start the server
 app.listen(8000, () => {
