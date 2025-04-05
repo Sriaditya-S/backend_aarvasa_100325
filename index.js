@@ -73,11 +73,11 @@ const nodemailer = require("nodemailer");
 const app = express();
 
 // 🔹 Improved CORS Configuration
-app.use(cors({
-    origin: 'https://frontendaarvasa100325.vercel.app', // Allow frontend domain
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+    cors({
+        origin: '*',
+    })
+);
 
 // 🔹 Ensure Every Response Contains Proper CORS Headers
 app.use((req, res, next) => {
