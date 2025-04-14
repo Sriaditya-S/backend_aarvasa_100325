@@ -18,6 +18,7 @@ exports.addAgent = async (req, res) => {
  */
 exports.getAllAgents = async (req, res) => {
   try {
+    res.setHeader('Access-Control-Allow-Origin', 'https://frontendaarvasa100325.vercel.app');
     const snapshot = await db.collection('AGENTS').get();
     const agents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json({ agents });
