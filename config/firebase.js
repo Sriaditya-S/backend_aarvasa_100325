@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-
+require("dotenv").config();
 let service_account = {
   "type": "service_account",
   "project_id": "aarvasa-property-listing",
