@@ -4,7 +4,7 @@ let service_account = {
   "type": "service_account",
   "project_id": "aarvasa-property-listing",
   "private_key_id": "60043211655064be676a5147ed13a7cc6d502ecc",
-  "private_key": process.env.FIREBASE_SERVICE_ACCOUNT,
+  "private_key": process.env.FIREBASE_SERVICE_ACCOUNT.replace(/\\n/g, '\n'),
   "client_email": "firebase-adminsdk-xiqqu@aarvasa-property-listing.iam.gserviceaccount.com",
   "client_id": "118103228326978316659",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
