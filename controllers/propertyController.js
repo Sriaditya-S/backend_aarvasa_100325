@@ -2,17 +2,39 @@ const db = require('../config/firebase'); // Firebase configuration
 const propertyModel = require('../models/propertyModel'); // Property model for database interactions
 const axios = require('axios'); // Axios for API requests
 
-// Function to get filtered properties based on filters from the request body
+// Function to filter properties based on the request body
 exports.filter = async (req, res) => {
-  const filters = req.body; // Get the filters from the request body
-  console.log("Received filters:", filters);
+  const { state, city, pincode, min, max } = req.body; // Extract filters from the request body
+  console.log("Received filters:", { state, city, pincode, min, max });
 
   try {
-    const filteredData = await getFilteredData(filters);
-    res.json(filteredData); // Send filtered data back as response
+    // Build Firestore query with filters
+    let query = db.collection('propertyDetails');
+
+    if (state) query = query.where('state', '==', state);
+    if (city) query = query.where('city', '==', city);
+    if (pincode) query = query.where('pincode', '==', pincode);
+
+    // Fetch filtered properties from Firestore
+    const propertiesSnapshot = await query.get();
+    const properties = propertiesSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Further filter properties by price range in memory
+    const filteredProperties = properties.filter((property) => {
+      const price = parseInt(property.price);
+      const minPrice = parseInt(min);
+      const maxPrice = parseInt(max);
+      return price >= minPrice && price <= maxPrice;
+    });
+
+    // Send the filtered properties as the response
+    res.json(filteredProperties);
   } catch (error) {
     console.error("Error filtering data:", error);
-    res.status(500).send('Server error');
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 };
 

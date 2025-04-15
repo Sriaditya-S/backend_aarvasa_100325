@@ -3,8 +3,8 @@ const router = express.Router();
 const propertyController = require('../controllers/propertyController');
 
 
-router.post('/filter', propertyController.filterProperties);
-router.post('/get_within_range', propertyController.getPropertiesWithinRange);
+router.post('/filter', propertyController.filter);
+router.post('/get_within_range', propertyController.get_within_range);
  
 // Define property-related routes
 router.post('/post_rental_properties', propertyController.postRentalProperties);
