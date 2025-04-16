@@ -91,3 +91,106 @@ exports.postSaleCommercialPlots = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch coordinates', details: error.message });
   }
 };
+
+exports.getAllCommercialSaleProperties = async (req, res) => {
+  try {
+    const properties = await commercialPlotModel.getAllCommercialPlots();
+    res.json({ properties });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch properties' });
+  }
+};
+
+exports.filterCommercialSaleProperties = async (req, res) => {
+  try {
+    const { state, city, pincode, min, max } = req.body;
+    const prop = await commercialPlotModel.filterCommercialPlots(state, city, pincode, min, max);
+    res.json({ prop });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to filter properties' });
+  }
+};
+
+exports.filterMapSaleCommercialPlots = async (req, res) => {
+  try {
+    const { address, range } = req.body;
+    const regex = /\/place\/([^\/]+)/;
+    const match = address.match(regex);
+
+    let userLat, userLng;
+    if (match) {
+      const placePart = decodeURIComponent(match[1]);
+      if (/^\d/.test(placePart)) {
+        const matchDMS = address.match(/\/place\/([^/@]+)/);
+        if (matchDMS) {
+          let ansdf = decodeURIComponent(matchDMS[1]).split("+");
+          let latDMS = ansdf[0];
+          let lngDMS = ansdf[1];
+          let dmsRegex = /(\d+)°(\d+)'([\d.]+)"([NSEW])/;
+          let match_lat = latDMS.match(dmsRegex);
+          let match_long = lngDMS.match(dmsRegex);
+          if (match_lat && match_long) {
+            let lat = dmsToDecimal(match_lat);
+            let lng = dmsToDecimal(match_long);
+            userLat = lat;
+            userLng = lng;
+          }
+        }
+      }
+    }
+    if (userLat === undefined || userLng === undefined) {
+      // fallback to geocoding
+      const apiUrl = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + encodeURIComponent(address) + '&key=' + process.env.GOOGLE_MAPS_API_KEY;
+      const response = await axios.get(apiUrl);
+      const data = response.data;
+      if (data.results && data.results.length > 0) {
+        userLat = data.results[0].geometry.location.lat;
+        userLng = data.results[0].geometry.location.lng;
+      } else {
+        return res.status(404).json({ error: 'Address not found' });
+      }
+    }
+
+    const properties = await commercialPlotModel.getAllCommercialPlots();
+    const nearbyProperties = [];
+    for (const property of properties) {
+      const propertyLat = property.lat;
+      const propertyLng = property.long;
+      const apiUrl = 'https://maps.googleapis.com/maps/api/distancematrix/json?' +
+        'origins=' + userLat + ',' + userLng +
+        '&destinations=' + propertyLat + ',' + propertyLng +
+        '&key=' + process.env.GOOGLE_MAPS_API_KEY +
+        '&units=metric';
+      const distanceResponse = await axios.get(apiUrl);
+      if (
+        distanceResponse.data.rows &&
+        distanceResponse.data.rows.length > 0 &&
+        distanceResponse.data.rows[0].elements &&
+        distanceResponse.data.rows[0].elements.length > 0
+      ) {
+        const distanceElement = distanceResponse.data.rows[0].elements[0];
+        if (distanceElement.status === "OK") {
+          let distanceInMeters = parseFloat(distanceElement.distance.value);
+          let ranged = parseFloat(range);
+          if (distanceInMeters <= ranged) {
+            nearbyProperties.push(property);
+          }
+        }
+      }
+    }
+    res.json({ nearbyprop: nearbyProperties });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch coordinates' });
+  }
+};
+
+// Helper function for DMS to decimal conversion
+function dmsToDecimal(match) {
+  let degrees = parseFloat(match[1]);
+  let minutes = parseFloat(match[2]);
+  let seconds = parseFloat(match[3]);
+  let direction = match[4];
+  let decimal = degrees + (minutes / 60) + (seconds / 3600);
+  if (direction === "S" || direction === "W") decimal = -decimal;
+  return decimal;
+}
