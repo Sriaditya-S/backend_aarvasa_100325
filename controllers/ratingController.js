@@ -7,12 +7,21 @@ exports.rateProperty = async (req, res) => {
   try {
     const { c, a, rt } = req.body;
 
-    // Determine the collection based on the property type
-    let collectionName;
-    if (c === 'sale_properties_rating') collectionName = 'BUY_PROPERTIES';
-    else if (c === 'sale_residential_plots_rating') collectionName = 'residential_plots_sell';
-    else if (c === 'residential_projects_rating') collectionName = 'RESIDENTIAL_PROJECTS';
-    else return res.status(400).json({ message: 'Invalid property type' });
+    // Map rating types to Firestore collections
+    const collectionMap = {
+      sale_properties_rating: 'BUY_PROPERTIES',
+      sale_residential_plots_rating: 'residential_plots_sell',
+      residential_projects_rating: 'RESIDENTIAL_PROJECTS',
+      rent_residential_plots_rating: 'RESIDENTIAL_PLOTS',
+      sale_commercial_plots_rating: 'commercial_plots_sell',
+      rent_commercial_plots_rating: 'COMMERCIAL_PLOTS',
+      sale_commercial_workspace_rating: 'commercial_work_spaces_sell',
+      rent_commercial_workspace_rating: 'COMMERCIAL_WORKSPACES',
+      rent_properties_rating: 'RENT_PROPERTIES', 
+    };
+
+    const collectionName = collectionMap[c];
+    if (!collectionName) return res.status(400).json({ message: 'Invalid property type' });
 
     // Fetch the document
     const docRef = db.collection(collectionName).doc(a.id);
