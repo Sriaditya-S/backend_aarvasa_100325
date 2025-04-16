@@ -32,7 +32,6 @@ const ratingRoutes = require('./routes/ratingRoutes');
 const consultationRoutes = require('./routes/consultationRoutes');
 const residentialProjectRoutes = require('./routes/residentialProjectRoutes');
 const commercialPlotRoutes = require('./routes/commercialPlotRoutes');
-const commercialPlotRoutes = require('./routes/commercialPlotRoutes');
 
 // Use modularized routes
 app.use('/properties', propertyRoutes);
@@ -43,9 +42,7 @@ app.use('/ratings', ratingRoutes);
 app.use('/consultations', consultationRoutes);
 app.use('/residential-projects', residentialProjectRoutes);
 app.use('/commercial-plots',commercialPlotRoutes);
-app.use('/commercial-plots', commercialPlotRoutes);
 
-// Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: 'Internal Server Error' });
