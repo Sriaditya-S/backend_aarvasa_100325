@@ -32,6 +32,7 @@ const ratingRoutes = require('./routes/ratingRoutes');
 const consultationRoutes = require('./routes/consultationRoutes');
 const residentialProjectRoutes = require('./routes/residentialProjectRoutes');
 const commercialPlotRoutes = require('./routes/commercialPlotRoutes');
+const commercialPlotRentRoutes = require('./routes/commercialPlotRentRoutes');
 
 // Use modularized routes
 app.use('/properties', propertyRoutes);
@@ -42,6 +43,7 @@ app.use('/ratings', ratingRoutes);
 app.use('/consultations', consultationRoutes);
 app.use('/residential-projects', residentialProjectRoutes);
 app.use('/commercial-plots',commercialPlotRoutes);
+app.use('/commercial-plots-rent', commercialPlotRentRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
