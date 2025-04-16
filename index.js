@@ -35,6 +35,7 @@ const commercialPlotRoutes = require('./routes/commercialPlotRoutes');
 const commercialPlotRentRoutes = require('./routes/commercialPlotRentRoutes');
 const residentialPlotRentRoutes = require('./routes/residentialPlotRentRoutes');
 const residentialPlotSellRoutes = require('./routes/residentialPlotSellRoutes');
+const commercialWorkspaceSellRoutes = require('./routes/commercialWorkspaceSellRoutes');
 
 // Use modularized routes
 app.use('/properties', propertyRoutes);
@@ -48,6 +49,7 @@ app.use('/commercial-plots',commercialPlotRoutes);
 app.use('/commercial-plots-rent', commercialPlotRentRoutes);
 app.use('/residential-plots-rent', residentialPlotRentRoutes);
 app.use('/residential-plots-sell', residentialPlotSellRoutes);
+app.use('/commercial-workspace-sell', commercialWorkspaceSellRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
